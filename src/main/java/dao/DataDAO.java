@@ -3,16 +3,17 @@ package dao;
 import db.MyConnection;
 import model.Data;
 
-import java.awt.image.RescaleOp;
 import java.io.*;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
 public class DataDAO {
+
+    // Method to retrieve all files for a specific email
     public static List<Data> getAllFiles(String email) throws SQLException {
         Connection connection = MyConnection.getConnection();
-        PreparedStatement ps = connection.prepareStatement("select * from data where email = ?");
+        PreparedStatement ps = connection.prepareStatement("SELECT * FROM data WHERE email = ?");
         ps.setString(1, email);
         ResultSet rs = ps.executeQuery();
         List<Data> files = new ArrayList<>();
@@ -24,48 +25,49 @@ public class DataDAO {
         }
         return files;
     }
-    public static int hideFile(Data file)throws SQLException, IOException {
+
+    // Method to hide a file (store it in the database)
+    public static int hideFile(Data file) throws SQLException, IOException {
         Connection connection = MyConnection.getConnection();
         PreparedStatement ps = connection.prepareStatement(
-                "insert into data(name, path, email, bin_data) values(?,?,?,?)");
+                "INSERT INTO data(name, path, email, bin_data) VALUES(?,?,?,?)");
+
         ps.setString(1, file.getFileName());
         ps.setString(2, file.getPath());
         ps.setString(3, file.getEmail());
+
         File f = new File(file.getPath());
-        FileReader fr = new FileReader(f);
-        ps.setCharacterStream(4, fr, f.length());
+        FileInputStream fis = new FileInputStream(f); // Using FileInputStream for binary data
+        ps.setBinaryStream(4, fis, (int) f.length()); // Using setBinaryStream to handle binary data
+
         int ans = ps.executeUpdate();
-        fr.close();
-        f.delete();
+        fis.close();
+        f.delete(); // Delete the file after inserting it into the database
         return ans;
     }
+
+    // Method to unhide a file (retrieve and save it back to its original location)
     public static void unhide(int id) throws SQLException, IOException {
         Connection connection = MyConnection.getConnection();
-        PreparedStatement ps = connection.prepareStatement("select path, bin_data from data where id = ?");
+        PreparedStatement ps = connection.prepareStatement("SELECT path, bin_data FROM data WHERE id = ?");
         ps.setInt(1, id);
         ResultSet rs = ps.executeQuery();
         rs.next();
         String path = rs.getString("path");
-        Clob c = rs.getClob("bin_data");
+        InputStream binDataStream = rs.getBinaryStream("bin_data"); // Use getBinaryStream for binary data
 
-        Reader r = c.getCharacterStream();
-        FileWriter fw = new FileWriter(path);
-        int i;
-        while ((i = r.read()) != -1) {
-            fw.write((char) i);
+        FileOutputStream fos = new FileOutputStream(path); // Write the binary data to a file
+        byte[] buffer = new byte[1024];
+        int bytesRead;
+        while ((bytesRead = binDataStream.read(buffer)) != -1) {
+            fos.write(buffer, 0, bytesRead);
         }
-        fw.close();
-        ps = connection.prepareStatement("delete from data where id = ?");
+        fos.close();
+
+        // Optionally delete the data from the database after retrieving it
+        ps = connection.prepareStatement("DELETE FROM data WHERE id = ?");
         ps.setInt(1, id);
         ps.executeUpdate();
         System.out.println("Successfully Unhidden");
     }
 }
-
-
-
-
-
-
-
-

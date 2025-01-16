@@ -53,7 +53,7 @@ public class SendOTPService {
             message.setSubject("File Enc ka OTP");
 
             // Now set the actual message
-            message.setText("Your One time Password for File Enc app is " + genOTP);
+            message.setText("Your One time Password for VeilCrypt app is " + genOTP);
 
             System.out.println("sending...");
             // Send message
