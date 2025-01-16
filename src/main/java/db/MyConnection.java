@@ -13,7 +13,7 @@ public class MyConnection {
         } catch (ClassNotFoundException | SQLException e) {
             e.printStackTrace();
         }
-        System.out.println("Connection ho gya saab");
+        //System.out.println("Connection ho gya saab");
         return connection;
     }
     public static void closeConnection() {

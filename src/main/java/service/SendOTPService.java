@@ -50,7 +50,7 @@ public class SendOTPService {
             message.addRecipient(Message.RecipientType.TO, new InternetAddress(to));
 
             // Set Subject: header field
-            message.setSubject("File Enc ka OTP");
+            //message.setSubject("VeilCrpt OTP: ");
 
             // Now set the actual message
             message.setText("Your One time Password for VeilCrypt app is " + genOTP);
